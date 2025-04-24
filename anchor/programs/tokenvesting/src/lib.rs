@@ -3,7 +3,7 @@
 use anchor_lang::prelude::*;
 use anchor_spl::token_interface::{self, Mint, TokenAccount, TokenInterface, TransferChecked};
 use anchor_spl::associated_token::AssociatedToken;
-declare_id!("coUnmi3oBUtwtd9fjeAvSsJssXh5A5xyPbhpewyzRVF");
+declare_id!("hfuMLGGxtTwEaSbHpJ5aNuqb28FvtAPSY3tq62NLut9");
 
 #[program]
 pub mod tokenvesting {
@@ -43,7 +43,7 @@ pub mod tokenvesting {
 
     }
 
-    pub fn claim_tokens(ctx: Context<ClaimTokens>, company_name: String)-> Result<()>{
+    pub fn claim_tokens(ctx: Context<ClaimTokens>, _company_name: String)-> Result<()>{
         let employee_account = &mut ctx.accounts.employee_account;
         let now = Clock::get()?.unix_timestamp;
         if now < employee_account.cliff_time{
@@ -60,12 +60,8 @@ pub mod tokenvesting {
             employee_account.total_amount
         }else {
             match employee_account.total_amount.checked_mul(time_since_start as u64){
-                Some(product) => (
-                    product / total_vesting_time as u64
-                ),
-                None =>(
-                    return Err(ErrorCode::CalculationOverflow.into())
-                )
+                Some(product) => product / total_vesting_time as u64,
+                None => return Err(ErrorCode::CalculationOverflow.into())
             } 
         };
 
@@ -84,7 +80,7 @@ pub mod tokenvesting {
         let cpi_program = ctx.accounts.token_program.to_account_info();
 
         let signer_seeds: &[&[&[u8]]] = &[
-            &[b"vesting_treasury",
+            &[b"vesting_treasury1",
             ctx.accounts.vesting_account.company_name.as_ref(),
             &[ctx.accounts.vesting_account.treasury_bump],],];
 
@@ -165,7 +161,7 @@ pub struct ClaimTokens<'info>{
 
     #[account(
         mut,
-        seeds = [b"employee_vesting", beneficiary.key().as_ref(), vesting_account.key().as_ref()],
+        seeds = [b"employee_vesting1", beneficiary.key().as_ref(), vesting_account.key().as_ref()],
         bump = employee_account.bump,
         has_one = beneficiary,
         has_one = vesting_account,
